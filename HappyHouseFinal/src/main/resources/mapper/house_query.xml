@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="com.mycom.happyhouse.dao.HouseinfoDao">
+
+	<select id="list" parameterType="map" resultType="com.mycom.happyhouse.dto.HouseinfoDto">
+		select
+		hi.apt_code, hi.apt_build_year, hi.apt_name, CONCAT(d.sido_name, ' ', d.gugun_name, ' ', d.dong_name) as address,
+		hi.road_name, hi.apt_lat, hi.apt_lng, hd.deal_amount as recent_deal_amount,
+		hd.deal_area as recent_deal_area, hd.deal_date as recent_deal_date,
+        case when (hi.apt_code in (select apt_code from bookmark_apt where user_id = #{userId}))
+        then 'T' else 'F' end as bookmarked
+		from houseinfo hi
+		left outer join housedeal hd on hi.recent_deal_no = hd.deal_no
+		left outer join dong d on hi.dong_code = d.dong_code
+		LIMIT #{limit} OFFSET #{offset}
+	</select>
+	
+	<select id="listTotalCount" resultType="int">
+		SELECT COUNT(*) FROM houseinfo
+	</select>
+
+	
+	<select id="search" parameterType="map" resultType="com.mycom.happyhouse.dto.HouseinfoDto">
+		select
+		hi.apt_code, hi.apt_build_year, hi.apt_name, CONCAT(d.sido_name, ' ', d.gugun_name, ' ', d.dong_name) as address,
+		hi.road_name, hi.apt_lat, hi.apt_lng, hd.deal_amount as recent_deal_amount,
+		hd.deal_area as recent_deal_area, hd.deal_date as recent_deal_date,
+        case when (hi.apt_code in (select apt_code from bookmark_apt where user_id = #{userId}))
+        then 'T' else 'F' end as bookmarked
+		from houseinfo hi
+		left outer join housedeal hd on hi.recent_deal_no = hd.deal_no
+		left outer join dong d on hi.dong_code = d.dong_code
+		<where>
+			<if test="aptName != null and !aptName.isEmpty">
+				hi.apt_name like CONCAT('%', #{aptName} ,'%')
+			</if>
+			<if test="dongCode != null and !dongCode.isEmpty">
+				and hi.dong_code like CONCAT(#{dongCode} ,'%')
+			</if>
+			<if test="priceMin > 0">
+				and hd.deal_amount > #{priceMin}
+			</if>
+			<if test="priceMax > 0">
+				and #{priceMax} > hd.deal_amount
+			</if>
+			<if test="buildYearMin > 0">
+				and hi.apt_build_year >= #{buildYearMin}
+			</if>
+			<if test="buildYearMax > 0">
+				and #{buildYearMax} >= hi.apt_build_year
+			</if>
+			<if test="aptCode != 0">
+				and hi.apt_code = #{aptCode}
+			</if>
+		</where>
+		LIMIT #{limit} OFFSET #{offset}
+	</select>
+	
+	<select id="searchTotalCount" parameterType="map" resultType="int">
+		SELECT COUNT(*) FROM houseinfo hi left outer join housedeal hd on hi.recent_deal_no = hd.deal_no
+		<where>
+			<if test="aptName != null and !aptName.isEmpty">
+				hi.apt_name like CONCAT('%', #{aptName} ,'%')
+			</if>
+			<if test="dongCode != null and !dongCode.isEmpty">
+				and hi.dong_code like CONCAT(#{dongCode} ,'%')
+			</if>
+			<if test="priceMin > 0">
+				and hd.deal_amount >= #{priceMin}
+			</if>
+			<if test="priceMax > 0">
+				and #{priceMax} >= hd.deal_amount
+			</if>
+			<if test="buildYearMin > 0">
+				and hi.apt_build_year >= #{buildYearMin}
+			</if>
+			<if test="buildYearMax > 0">
+				and #{buildYearMax} >= hi.apt_build_year
+			</if>
+			<if test="aptCode != 0">
+				and hi.apt_code = #{aptCode}
+			</if>
+		</where>
+	</select>
+	
+	<select id="listByBookmarkApt" parameterType="map" resultType="com.mycom.happyhouse.dto.HouseinfoDto">
+		select
+		hi.apt_code, hi.apt_build_year, hi.apt_name, CONCAT(d.sido_name, ' ', d.gugun_name, ' ', d.dong_name) as address,
+		hi.road_name, hi.apt_lat, hi.apt_lng, hd.deal_amount as recent_deal_amount,
+		hd.deal_area as recent_deal_area, hd.deal_date as recent_deal_date,
+        case when (hi.apt_code in (select apt_code from bookmark_apt where user_id = #{userId}))
+        then 'T' else 'F' end as bookmarked
+		from houseinfo hi
+		left outer join bookmark_apt ba on hi.apt_code = ba.apt_code
+		left outer join housedeal hd on hi.recent_deal_no = hd.deal_no
+		left outer join dong d on hi.dong_code = d.dong_code
+		where ba.user_id = #{userId}
+		LIMIT #{limit} OFFSET #{offset}
+	</select>
+	
+	<select id="listByBookmarkAptTotalCount" parameterType="string" resultType="int">
+		SELECT COUNT(*) FROM bookmark_apt where user_id = #{userId}
+	</select>
+	
+	<select id="listByBookmarkDong" parameterType="map" resultType="com.mycom.happyhouse.dto.HouseinfoDto">
+		select
+		hi.apt_code, hi.apt_build_year, hi.apt_name, CONCAT(d.sido_name, ' ', d.gugun_name, ' ', d.dong_name) as address,
+		hi.road_name, hi.apt_lat, hi.apt_lng, hd.deal_amount as recent_deal_amount,
+		hd.deal_area as recent_deal_area, hd.deal_date as recent_deal_date,
+        case when (hi.apt_code in (select apt_code from bookmark_apt where user_id = #{userId}))
+        then 'T' else 'F' end as bookmarked
+		from houseinfo hi
+		left outer join bookmark_dong bd on hi.dong_code = bd.dong_code
+		left outer join housedeal hd on hi.recent_deal_no = hd.deal_no
+		left outer join dong d on hi.dong_code = d.dong_code
+		where bd.user_id = #{userId}
+		LIMIT #{limit} OFFSET #{offset}
+	</select>
+	
+	<select id="listByBookmarkDongTotalCount" parameterType="string" resultType="int">
+		SELECT COUNT(*)
+		from houseinfo hi inner join bookmark_dong bd on hi.dong_code = bd.dong_code where bd.user_id = #{userId}
+	</select>
+	
+	<select id="getUserAptCode" parameterType="map" resultType="long">
+		SELECT IFNULL(user_apt_code, 0) as apt_code FROM users where user_id = #{userId}
+	</select>
+	
+	<select id="detail" parameterType="map" resultType="com.mycom.happyhouse.dto.HouseinfoDto">
+		SELECT hi.apt_code, hi.apt_build_year, hi.apt_name,
+		concat(d.sido_name, ' ', d.gugun_name, ' ', d.dong_name) as address, hi.road_name,
+		hi.apt_jibun, hi.apt_lat, hi.apt_lng,
+        case when (hi.apt_code in (select apt_code from bookmark_apt where user_id = #{userId}))
+        then 'T' else 'F' end as bookmarked
+		from houseinfo hi left outer join dong d on hi.dong_code = d.dong_code
+		where apt_code = #{aptCode}
+	</select>
+	
+	<select id="dealList" parameterType="map" resultType="com.mycom.happyhouse.dto.HousedealDto">
+		SELECT deal_amount, deal_year, deal_month, deal_day, deal_area, deal_floor
+		from housedeal where apt_code = #{aptCode}
+		ORDER BY deal_date desc
+		LIMIT #{limit} OFFSET #{offset}
+	</select>
+	
+	<select id="dealListTotalCount" parameterType="long" resultType="int">
+		SELECT COUNT(*) FROM housedeal where apt_code = #{aptCode}
+	</select>
+
+	<insert id="insertBookmarkApt" parameterType="com.mycom.happyhouse.dto.BookmarkAptDto">
+		INSERT INTO bookmark_apt values (#{userId}, #{aptCode})
+	</insert>
+	
+	<insert id="insertBookmarkDong" parameterType="com.mycom.happyhouse.dto.BookmarkDongDto">
+		INSERT INTO bookmark_dong values (#{userId}, #{dongCode})
+	</insert>
+	
+	<delete id="deleteBookmarkApt" parameterType="com.mycom.happyhouse.dto.BookmarkAptDto">
+		DELETE FROM bookmark_apt WHERE user_id = #{userId} AND apt_code = #{aptCode}
+	</delete>
+	
+	<delete id="deleteBookmarkDong" parameterType="com.mycom.happyhouse.dto.BookmarkDongDto">
+		DELETE FROM bookmark_dong WHERE user_id = #{userId} AND dong_code = #{dongCode}
+	</delete>
+	
+<!-- 
+	<update id="boardUpdate" parameterType="com.mycom.happyhouse5.dto.BoardDto">
+		UPDATE BOARD
+		   SET TITLE = #{title},
+		   CONTENT   = #{content}
+		 WHERE BOARD_ID = #{boardId}
+	</update>
+	
+	<delete id="boardDelete" parameterType="int">
+		DELETE FROM BOARD WHERE BOARD_ID = #{boardId}
+	</delete>
+	
+	<delete id="boardFileDelete" parameterType="int">
+		DELETE FROM BOARD_FILE WHERE BOARD_ID = #{boardId}
+	</delete>
+	
+	<delete id="boardReadCountDelete" parameterType="int">
+		DELETE FROM board_user_read WHERE BOARD_ID = #{boardId}
+	</delete>
+	
+	<select id="boardFileUrlDeleteList" parameterType="int" resultType="string">
+		SELECT FILE_URL FROM BOARD_FILE WHERE BOARD_ID = #{boardId}
+	</select>
+
+	<select id="boardDetail" parameterType="int" resultType="com.mycom.happyhouse5.dto.BoardDto">
+		SELECT b.BOARD_ID, b.userId, u.userName,
+			   b.TITLE, b.CONTENT, b.REG_DT, b.READ_COUNT
+		  FROM BOARD b, USERS u
+		 WHERE b.BOARD_ID = #{boardId}
+		   AND b.userId = u.userId
+	</select>
+	
+	<select id="boardDetailFileList" parameterType="int" resultType="com.mycom.happyhouse5.dto.BoardFileDto">
+		SELECT BOARD_ID, FILE_ID, FILE_NAME, FILE_SIZE, FILE_CONTENT_TYPE, FILE_URL, REG_DT
+		  FROM BOARD_FILE
+		 WHERE BOARD_ID = #{boardId}
+	</select>
+	
+	Dao use Dto
+	<select id="boardUserReadCount" parameterType="map" resultType="int">
+		SELECT count(*) FROM board_user_read WHERE board_id = #{boardId} and userId = #{userId}
+	</select>
+	
+	Dao use @param
+	<insert id="boardUserReadInsert" parameterType="map">
+		INSERT INTO board_user_read ( board_id, userId )
+		            VALUES ( #{boardId}, #{userId} )
+	</insert>
+	
+	<update id="boardReadCountUpdate" parameterType="int">
+		UPDATE board set READ_COUNT = READ_COUNT + 1
+		 WHERE BOARD_ID = #{boardId}
+	</update>
+ -->
+</mapper>
+

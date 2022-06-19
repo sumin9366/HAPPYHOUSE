@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="com.mycom.happyhouse.dao.BoardDao">
+
+	<insert id="boardInsert" parameterType="com.mycom.happyhouse.dto.BoardDto" useGeneratedKeys="true" keyProperty="boardId">
+		INSERT INTO BOARD ( user_Id, BOARD_TITLE, BOARD_CONTENT, BOARD_REG_DT, BOARD_READ_COUNT,board_Clsf )
+		            VALUES ( #{userId}, #{boardTitle}, #{boardContent}, now(), 0,#{boardClsf} )
+	</insert>
+	
+	<insert id="boardFileInsert" parameterType="com.mycom.happyhouse.dto.BoardFileDto">
+		INSERT INTO BOARD_FILE ( BOARD_ID, FILE_NAME, FILE_SIZE, FILE_CONTENT_TYPE, FILE_URL )
+		            VALUES ( #{boardId}, #{fileName}, #{fileSize}, #{fileContentType}, #{fileUrl} )
+	</insert>
+	
+	<!-- reg_dt : LocalDateTime, check out BoardDto setter  -->
+	<select id="boardList" parameterType="map" resultType="com.mycom.happyhouse.dto.BoardDto">
+		SELECT b.BOARD_ID, b.user_Id, u.user_Name,
+		  	   b.BOARD_TITLE, b.BOARD_CONTENT, b.BOARD_REG_DT, b.BOARD_READ_COUNT
+		  FROM BOARD b, USERS u
+ 		 WHERE b.user_Id = u.user_Id
+		 and b.board_clsf=#{boardClsf}
+		 ORDER BY b.BOARD_ID DESC
+		 LIMIT #{limit} OFFSET #{offset}
+	</select>
+	
+	<select id="boardListTotalCount" parameterType="map" resultType="int">
+		SELECT COUNT(*) FROM BOARD 
+		where board_clsf= #{boardClsf}
+	</select>
+
+	
+	<select id="boardListSearchWord" parameterType="map" resultType="com.mycom.happyhouse.dto.BoardDto">
+		SELECT b.BOARD_ID, b.user_Id, u.user_Name,
+		  	   b.BOARD_TITLE, b.BOARD_CONTENT, b.BOARD_REG_DT, b.BOARD_READ_COUNT
+		  FROM BOARD b, USERS u
+		  WHERE (b.user_Id = u.user_Id
+		    AND b.BOARD_TITLE LIKE CONCAT('%', #{searchWord} ,'%'))
+		     and b.board_clsf= #{boardClsf}
+		  ORDER BY b.BOARD_ID DESC
+		  LIMIT #{limit} OFFSET #{offset}
+	</select>
+	
+	<select id="boardListSearchWordTotalCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM BOARD
+		 WHERE BOARD_TITLE LIKE CONCAT('%', #{searchWord} ,'%')
+		 and board_clsf= #{boardClsf}
+	</select>
+	
+
+	<update id="boardUpdate" parameterType="com.mycom.happyhouse.dto.BoardDto">
+		UPDATE BOARD
+		   SET BOARD_TITLE = #{boardTitle},
+		   BOARD_CONTENT   = #{boardContent}
+		 WHERE BOARD_ID = #{boardId}
+	</update>
+	
+	<delete id="boardDelete" parameterType="int">
+		DELETE FROM BOARD WHERE BOARD_ID = #{boardId}
+	</delete>
+	
+	<delete id="boardFileDelete" parameterType="int">
+		DELETE FROM BOARD_FILE WHERE BOARD_ID = #{boardId}
+	</delete>
+	
+	<delete id="boardReadCountDelete" parameterType="int">
+		DELETE FROM board_user_read WHERE BOARD_ID = #{boardId}
+	</delete>
+	
+	<select id="boardFileUrlDeleteList" parameterType="int" resultType="string">
+		SELECT FILE_URL FROM BOARD_FILE WHERE BOARD_ID = #{boardId}
+	</select>
+
+	<select id="boardDetail" parameterType="int" resultType="com.mycom.happyhouse.dto.BoardDto">
+		SELECT b.BOARD_ID, b.user_Id, u.user_Name,
+			   b.BOARD_TITLE, b.BOARD_CONTENT, b.BOARD_REG_DT, b.BOARD_READ_COUNT
+		  FROM BOARD b, USERS u
+		 WHERE b.BOARD_ID = #{boardId}
+		   AND b.user_Id = u.user_Id
+	</select>
+	
+	<select id="boardDetailFileList" parameterType="int" resultType="com.mycom.happyhouse.dto.BoardFileDto">
+		SELECT BOARD_ID, FILE_ID, FILE_NAME, FILE_SIZE, FILE_CONTENT_TYPE, FILE_URL, FILE_REG_DT
+		  FROM BOARD_FILE
+		 WHERE BOARD_ID = #{boardId}
+	</select>
+	
+	<!-- Dao use Dto -->
+	<select id="boardUserReadCount" parameterType="map" resultType="int">
+		SELECT count(*) FROM board_user_read WHERE board_id = #{boardId} and user_Id = #{userId}
+	</select>
+	
+	<!-- Dao use @param -->
+	<insert id="boardUserReadInsert" parameterType="map">
+		INSERT INTO board_user_read ( board_id, user_Id )
+		            VALUES ( #{boardId}, #{userId} )
+	</insert>
+	
+	<update id="boardReadCountUpdate" parameterType="int">
+		UPDATE board set board_READ_COUNT = board_READ_COUNT + 1
+		 WHERE BOARD_ID = #{boardId}
+	</update>
+
+</mapper>
+
+
+
+
+
+
